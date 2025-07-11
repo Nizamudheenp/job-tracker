@@ -4,7 +4,7 @@ import JobForm from '../components/JobForm';
 import JobCard from '../components/JobCard';
 import EditModal from '../components/EditModal';
 
-const Home = () => {
+const Home = ({onLogout}) => {
   const [jobs, setJobs] = useState([]);
   const [editingJob, setEditingJob] = useState(null);
   const [search, setSearch] = useState('');
@@ -27,7 +27,15 @@ const Home = () => {
   return (
     <div className="max-w-6xl mx-auto px-6 py-10 space-y-10">
       <h1 className="text-4xl font-extrabold text-center text-green-700">🎯 Job Tracker</h1>
-
+      <button
+          onClick={() => {
+            localStorage.removeItem('token');
+            onLogout();
+          }}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl shadow-sm"
+        >
+          Logout
+        </button>
       <JobForm onJobCreated={loadJobs} />
 
       <div className="flex flex-col md:flex-row items-center gap-4">

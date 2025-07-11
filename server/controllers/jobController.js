@@ -3,7 +3,7 @@ const JobDB = require('../models/jobModel');
 exports.getJobs = async (req, res) => {
   try {
     const { status, search } = req.query;
-    let query = {};
+    let query = { user: req.user._id };
 
     if (status) query.status = status;
     if (search) query.company = { $regex: search, $options: 'i' };
@@ -17,7 +17,7 @@ exports.getJobs = async (req, res) => {
 
 exports.createJob = async (req, res) => {
   try {
-    const newJob = new JobDB(req.body);
+    const newJob = new JobDB({ ...req.body, user: req.user._id });
     const saved = await newJob.save();
     res.status(201).json(saved);
   } catch (err) {
@@ -27,11 +27,13 @@ exports.createJob = async (req, res) => {
 
 exports.updateJob = async (req, res) => {
   try {
-    const updated = await JobDB.findByIdAndUpdate(req.params.id, req.body, {
-      new: true
-    });
-    if (!updated) return res.status(404).json({ error: 'Job not found' });
-    res.json(updated);
+    const job = await JobDB.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      req.body,
+      { new: true }
+    );
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    res.json(job);
   } catch (err) {
     res.status(400).json({ error: 'Update failed' });
   }
@@ -39,7 +41,10 @@ exports.updateJob = async (req, res) => {
 
 exports.deleteJob = async (req, res) => {
   try {
-    const deleted = await JobDB.findByIdAndDelete(req.params.id);
+    const deleted = await JobDB.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user._id,
+    });
     if (!deleted) return res.status(404).json({ error: 'Job not found' });
     res.json({ message: 'Job deleted' });
   } catch (err) {
